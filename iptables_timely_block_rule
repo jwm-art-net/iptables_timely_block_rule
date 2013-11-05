@@ -1,0 +1,98 @@
+#!/bin/bash
+# usage:
+#   iptables_block_rule [block|unblock|checktime]
+#
+#   blocks by default if no arguments specified.
+#   checktime should be called at startup by ie cron
+
+
+# when to block and unblock internet access, should be the same
+# as when this script is called to do the same by crontab.
+
+# start and end are interpreted as minutes in the hour here,
+# and are used by the test_time function which should be
+# activated at startup by cron.
+
+ALLOWSTART="49"
+  ALLOWEND="59"
+
+
+# the iptables rule, redirects tcp traffic to tinyproxy:
+RULE="OUTPUT -p tcp -m owner ! --uid-owner proxy \
+                -m multiport --dports http,https \
+                    -j REDIRECT --to-port 8080"
+
+function add_rule
+{
+    iptables -t nat -C $RULE 2> /dev/null
+    if [ $? -eq 0 ]; then
+        logger "$0: rule exists"
+        return
+    fi
+
+    iptables -t nat -A $RULE
+    if [ $? -eq 0 ]; then
+        logger "$0: rule added"
+    fi
+}
+
+function delete_rule
+{
+    # check for existing (duplicate) rules and delete them:
+    # the check:
+    iptables -t nat -C $RULE 2> /dev/null
+    while [ $? -eq 0 ]; do
+        # the deletion:
+        iptables -t nat -D $RULE
+        if [ $? -eq 0 ]; then
+            logger "$0: rule deleted"
+        fi
+        # check for duplicates:
+        iptables -t nat -C $RULE 2> /dev/null
+    done
+}
+
+
+function check_time
+{
+    NOW=$(date +"%M")
+    if [[ "$NOW" == "$ALLOWSTART" ||
+          "$NOW" >  "$ALLOWSTART" && "$NOW" <  "$ALLOWEND" ||
+                                     "$NOW" == "$ALLOWEND" ]]
+    then
+    logger "$0: time says delete block rule"
+    delete_rule
+    else
+    logger "$0: time says add block rule"
+    add_rule
+    fi
+}
+
+
+# if no arguments passed, then block tcp traffic
+if [[ "x$1" == "xblock" ]]; then
+    logger "$0: adding block rule"
+    add_rule
+    exit 0
+fi
+
+if [[ "x$1" == "xchecktime" ]]; then
+    logger "$0: checking time"
+    check_time
+    exit 0
+fi
+
+if [[ "x$1" == "xunblock" ]]; then
+    logger "$0: deleting block rule"
+    delete_rule
+    exit 0
+fi
+
+# if in doubt... block
+logger "$0: adding block rule"
+add_rule
+
+
+# FYI
+# to list iptables rules:
+# iptables -t nat -L

@@ -1,0 +1,68 @@
+iptables_timely_block_rule
+==========================
+
+Block access to tcp communications for all but ten minutes in every hour.
+
+
+
+pre-installation
+================
+
+*) this script needs dansguardian and tinyproxy to be installed. the script
+works by using a transparent proxy to redirect all tcp traffic to dansguardian.
+by using dansguardian you can whitelist sites to be never be blocked, or...
+whatever.
+
+*) follow these instructions to setup dansguardian (ignoring the setup firefox 
+instructions):
+http://tinyapps.org/docs/ubuntu_whitelist_blacklist_websites.html
+
+*) the script also makes use of 'logger' to log its activity to the system log
+(probably /var/log/syslog), if your system uses something else edit the script
+appropriately.
+
+
+
+installation
+============
+
+*) first copy the script and setup appropriate permissions:
+
+    sudo cp -v iptables_timely_block_rule /root/
+    sudo chown -v root:root /root/iptables_timely_block_rule
+    sudo chmod -v 0744 /root/iptables_timely_block_rule
+
+
+
+*) add two cron jobs, the first to unblock internet access,
+and the second to block it. (the command below opens up an
+editor in which you type the two lines that follow it).
+
+    sudo crontab -e
+    49 * * * * /root/iptables_timely_block_rule unblock
+    59 * * * * /root/iptables_timely_block_rule block
+
+
+
+*) add the script to startup on boot, by editing /etc/rc.local
+and putting the path to the script before 'exit 0', ie:
+    sudoedit /etc/rc.local
+...
+    # By default this script does nothing.
+
+    /root/iptables_timely_block_rule checktime
+
+    exit 0
+
+
+
+*) note if your distro does not use sysvinit anymore, it's probably
+   using systemd, in which case you'll have to find out how to start
+   the script at boot using systemd (I currently am without a systemd
+   based distro due to hdd failure).
+
+
+
+*) all done, enjoy distraction free computing :-)
+
+
