@@ -46,6 +46,7 @@ editor in which you type the two lines that follow it).
 
 *) add the script to startup on boot, by editing /etc/rc.local
 and putting the path to the script before 'exit 0', ie:
+
     sudoedit /etc/rc.local
 ...
     # By default this script does nothing.
@@ -57,14 +58,15 @@ and putting the path to the script before 'exit 0', ie:
 
 
 *) note if your distro does not use sysvinit anymore, it's probably
-   using systemd, in which case you'll have to find out how to start
-   the script at boot using systemd (I currently am without a systemd
-   based distro due to hdd failure).
+using systemd, in which case /etc/rc.local won't exist and you'll have
+to find out how to start the script at boot using systemd (I currently
+am without a systemd based distro due to hdd failure).
 
 
 
 *) all done, enjoy distraction free computing :-)
 
 *) should you need to unblock net access:
+
     sudo /root/iptables_timely_block_rule unblock
 
