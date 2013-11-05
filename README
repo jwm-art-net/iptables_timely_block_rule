@@ -65,4 +65,6 @@ and putting the path to the script before 'exit 0', ie:
 
 *) all done, enjoy distraction free computing :-)
 
+*) should you need to unblock net access:
+    sudo /root/iptables_timely_block_rule unblock
 
