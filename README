@@ -1,72 +1,40 @@
 iptables_timely_block_rule
 ==========================
 
-Block access to tcp communications for all but ten minutes in every hour.
+A script to increase productivity by blocking internet/tcp access/traffic
+for 50 minutes in every hour.
 
+The script is run by crontab, and also after boot (currently only if
+using system V init scripts) to check the time and block accordingly.
 
-
-pre-installation
-================
-
-*) this script needs dansguardian and tinyproxy to be installed. the script
-works by using a transparent proxy to redirect all tcp traffic to dansguardian.
-by using dansguardian you can whitelist sites to be never be blocked, or...
-whatever.
-
-*) follow these instructions to setup dansguardian (ignoring the setup firefox 
-instructions):
-http://tinyapps.org/docs/ubuntu_whitelist_blacklist_websites.html
-
-*) the script also makes use of 'logger' to log its activity to the system log
-(probably /var/log/syslog), if your system uses something else edit the script
-appropriately.
-
+NOTE: earlier versions of this script had IPtables redirect traffic
+to dansguardian, but due to issues around https traffic and filtering,
+as well as the additional configuration required, I decided to make
+life easier for myself by merely getting IPtables to drop the traffic
+instead.
 
 
 installation
 ============
 
-*) first copy the script and setup appropriate permissions:
+git clone https://github.com/jwm-art-net/iptables_timely_block_rule.git
+cd iptables_timely_block_rule
 
-    sudo cp -v iptables_timely_block_rule /root/
-    sudo chown -v root:root /root/iptables_timely_block_rule
-    sudo chmod -v 0744 /root/iptables_timely_block_rule
+open up the 'install' file and check the contents at the top in the
+options section, pay attention to the notes about sysVinit and systemd
+and then:
 
+sudo ./install
 
+You might find that you no longer have internet access on your machine.
+If you weren't quite ready for this then:
+    (and unless you changed INSTPATH).
 
-*) add two cron jobs, the first to unblock internet access,
-and the second to block it. (the command below opens up an
-editor in which you type the two lines that follow it).
+sudo /root/iptables_timely_block_rule unblock
 
-    sudo crontab -e
-    49 * * * * /root/iptables_timely_block_rule unblock
-    59 * * * * /root/iptables_timely_block_rule block
+*) enjoy internet-distraction free computing :-)
 
-
-
-*) add the script to startup on boot, by editing /etc/rc.local
-and putting the path to the script before 'exit 0', ie:
-
-    sudoedit /etc/rc.local
-...
-    # By default this script does nothing.
-
-    /root/iptables_timely_block_rule checktime
-
-    exit 0
-
-
-
-*) note if your distro does not use sysvinit anymore, it's probably
+*) note: if your distro does not use sysvinit anymore, it's probably
 using systemd, in which case /etc/rc.local won't exist and you'll have
 to find out how to start the script at boot using systemd (I currently
 am without a systemd based distro due to hdd failure).
-
-
-
-*) all done, enjoy distraction free computing :-)
-
-*) should you need to unblock net access:
-
-    sudo /root/iptables_timely_block_rule unblock
-

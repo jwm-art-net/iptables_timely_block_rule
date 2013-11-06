@@ -14,23 +14,21 @@
 # activated at startup by cron.
 
 ALLOWSTART="49"
-  ALLOWEND="59"
+ALLOWEND="59"
 
 
 # the iptables rule, redirects tcp traffic to tinyproxy:
-RULE="OUTPUT -p tcp -m owner ! --uid-owner proxy \
-                -m multiport --dports http,https \
-                    -j REDIRECT --to-port 8080"
+RULE="OUTPUT -p tcp -m owner ! --uid-owner proxy -m multiport --dports http,https -j DROP"
 
 function add_rule
 {
-    iptables -t nat -C $RULE 2> /dev/null
+    iptables -C $RULE 2> /dev/null
     if [ $? -eq 0 ]; then
         logger "$0: rule exists"
         return
     fi
 
-    iptables -t nat -A $RULE
+    iptables -A $RULE
     if [ $? -eq 0 ]; then
         logger "$0: rule added"
     fi
@@ -40,15 +38,15 @@ function delete_rule
 {
     # check for existing (duplicate) rules and delete them:
     # the check:
-    iptables -t nat -C $RULE 2> /dev/null
+    iptables -C $RULE 2> /dev/null
     while [ $? -eq 0 ]; do
         # the deletion:
-        iptables -t nat -D $RULE
+        iptables -D $RULE
         if [ $? -eq 0 ]; then
             logger "$0: rule deleted"
         fi
         # check for duplicates:
-        iptables -t nat -C $RULE 2> /dev/null
+        iptables -C $RULE 2> /dev/null
     done
 }
 

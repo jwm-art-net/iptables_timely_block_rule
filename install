@@ -1,0 +1,67 @@
+#!/bin/bash
+#
+# install file for iptables_timely_block_rule
+#
+#                   a script to increase productivity by blocking
+#                   internet/tcp access/traffic for a 50 minutes
+#                   in every hour.
+#
+#===========================================================================
+# options, edit these to modify behaviour
+
+# ***** WARNING *****
+# if you run install and then change INSTPATH and then run install
+# for a second time, you will need to run:
+#     sudo crontab -e
+# manually to delete the cron jobs from the first run of install.
+
+UNBLOCK_START="49" # minute in the hour to start allowing tcp traffic
+UNBLOCK_END="59"   # minute in the hour to start blocking tcp traffic
+INSTPATH="/root/iptables_timely_block_rule"
+
+# uncomment this if you have a sysvinit system and want the
+# script to check the time after booting:
+#SYSV_RCLOCAL="/etc/rc.local"
+
+#end of options
+#===========================================================================
+
+echo "Modifying iptables_timely_block_rule..."
+echo "Allowing TCP traffic between the minutes of "
+echo "$UNBLOCK_START and $UNBLOCK_END."
+
+sed -i "s/ALLOWSTART=[\"]\(.\+\)*[\"]/ALLOWSTART=\"$UNBLOCK_START\"/" iptables_timely_block_rule
+sed -i "s/ALLOWEND=[\"]\(.\+\)*[\"]/ALLOWEND=\"$UNBLOCK_END\"/" iptables_timely_block_rule
+
+echo "Copying iptables_timely_block_rule to $INSTPATH..."
+cp -v iptables_timely_block_rule $INSTPATH
+echo "And setting permissions..."
+chmod -v 0744 $INSTPATH
+
+# add new entries to crontab, but we don't want
+# to duplicate entries so remove any existing
+# references to $INSTPATH
+
+echo "Removing old iptables_timely_block_rule jobs from crontab..."
+crontab -l | sed "\|^[0-9]\+\([[:space:]]\+[[:print:]]\)\{4\}[[:space:]]\+$INSTPATH[[:space:]]\+.\+|d" > crontab_tmp
+
+echo "$UNBLOCK_START * * * * $INSTPATH unblock" >> crontab_tmp
+echo "$UNBLOCK_END * * * * $INSTPATH block" >> crontab_tmp
+
+echo "Adding new iptables_timely_block_rule jobs to crontab..."
+
+crontab crontab_tmp
+
+if [ -n "$SYSV_RCLOCAL" ]; then
+  echo "Adding iptables_timely_block_rule checktime to $SYSV_RCLOCAL..."
+  sed -i "\|^$INSTPATH[[:space:]]\+.\+|d" $SYSV_RCLOCAL
+  sed -i "/^exit 0/d" $SYSV_RCLOCAL
+  echo "$INSTPATH checktime" >> $SYSV_RCLOCAL
+  echo "exit 0" >> $SYSV_RCLOCAL
+fi
+
+echo "Finished install..."
+
+echo "Checking time..."
+$INSTPATH
+
