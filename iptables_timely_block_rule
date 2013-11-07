@@ -13,7 +13,7 @@
 # and are used by the test_time function which should be
 # activated at startup by cron.
 
-ALLOWSTART="49"
+ALLOWSTART="51"
 ALLOWEND="59"
 
 

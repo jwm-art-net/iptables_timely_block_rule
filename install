@@ -15,7 +15,7 @@
 #     sudo crontab -e
 # manually to delete the cron jobs from the first run of install.
 
-UNBLOCK_START="49" # minute in the hour to start allowing tcp traffic
+UNBLOCK_START="51" # minute in the hour to start allowing tcp traffic
 UNBLOCK_END="59"   # minute in the hour to start blocking tcp traffic
 INSTPATH="/root/iptables_timely_block_rule"
 
@@ -63,5 +63,5 @@ fi
 echo "Finished install..."
 
 echo "Checking time..."
-$INSTPATH
+$INSTPATH checktime
 
