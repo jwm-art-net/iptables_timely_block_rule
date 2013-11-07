@@ -15,9 +15,22 @@
 #     sudo crontab -e
 # manually to delete the cron jobs from the first run of install.
 
-UNBLOCK_START="51" # minute in the hour to start allowing tcp traffic
+UNBLOCK_START="49" # minute in the hour to start allowing tcp traffic
 UNBLOCK_END="59"   # minute in the hour to start blocking tcp traffic
 INSTPATH="/root/iptables_timely_block_rule"
+IPTABLES=$(command -v iptables)
+if [[ -z $IPTABLES ]]; then
+    echo "iptables was not found, please either install it or specify"
+    echo "its location within this script."
+    exit 1
+fi
+
+LOGGER=$(command -v logger)
+if [[ -z $IPTABLES ]]; then
+    echo "logger was not found, please either install it or specify"
+    echo "its location within this script."
+    exit 1
+fi
 
 # uncomment this if you have a sysvinit system and want the
 # script to check the time after booting:
@@ -26,10 +39,15 @@ INSTPATH="/root/iptables_timely_block_rule"
 #end of options
 #===========================================================================
 
-echo "Modifying iptables_timely_block_rule..."
+echo "Configuring iptables_timely_block_rule..."
+
+echo "Setting location of iptables binary."
+sed -i "s/IPTABLES=[\"]\(.\+\)*[\"]/IPTABLES=\"$IPTABLES\"/" iptables_timely_block_rule
+echo "Setting location of logger binary."
+sed -i "s/LOGGER=[\"]\(.\+\)*[\"]/LOGGER=\"$LOGGER\"/" iptables_timely_block_rule
+
 echo "Allowing TCP traffic between the minutes of "
 echo "$UNBLOCK_START and $UNBLOCK_END."
-
 sed -i "s/ALLOWSTART=[\"]\(.\+\)*[\"]/ALLOWSTART=\"$UNBLOCK_START\"/" iptables_timely_block_rule
 sed -i "s/ALLOWEND=[\"]\(.\+\)*[\"]/ALLOWEND=\"$UNBLOCK_END\"/" iptables_timely_block_rule
 

@@ -13,24 +13,32 @@
 # and are used by the test_time function which should be
 # activated at startup by cron.
 
-ALLOWSTART="51"
-ALLOWEND="59"
-
+#----------------------------------------------------
+# RATHER THAN EDITING THESE LINES, PLEASE SEE THE
+# ACCOMPANYING 'install' SCRIPT (which will do it
+# for you).
+ALLOWSTART="44"
+ALLOWEND="45"
+IPTABLES="/sbin/iptables"
+LOGGER="/usr/bin/logger"
+#----------------------------------------------------
 
 # the iptables rule, redirects tcp traffic to tinyproxy:
 RULE="OUTPUT -p tcp -m owner ! --uid-owner proxy -m multiport --dports http,https -j DROP"
 
 function add_rule
 {
-    iptables -C $RULE 2> /dev/null
+    $IPTABLES -C $RULE 2> /dev/null
     if [ $? -eq 0 ]; then
-        logger "$0: rule exists"
+        $LOGGER "$0: rule exists"
         return
     fi
 
-    iptables -A $RULE
+    $IPTABLES -A $RULE
     if [ $? -eq 0 ]; then
-        logger "$0: rule added"
+        $LOGGER "$0: rule added"
+    else
+        $LOGGER "$0: failed to ad rule"
     fi
 }
 
@@ -38,15 +46,15 @@ function delete_rule
 {
     # check for existing (duplicate) rules and delete them:
     # the check:
-    iptables -C $RULE 2> /dev/null
+    $IPTABLES -C $RULE 2> /dev/null
     while [ $? -eq 0 ]; do
         # the deletion:
-        iptables -D $RULE
+        $IPTABLES -D $RULE
         if [ $? -eq 0 ]; then
-            logger "$0: rule deleted"
+            $LOGGER "$0: rule deleted"
         fi
         # check for duplicates:
-        iptables -C $RULE 2> /dev/null
+        $IPTABLES -C $RULE 2> /dev/null
     done
 }
 
@@ -58,10 +66,10 @@ function check_time
           "$NOW" >  "$ALLOWSTART" && "$NOW" <  "$ALLOWEND" ||
                                      "$NOW" == "$ALLOWEND" ]]
     then
-    logger "$0: time says delete block rule"
+    $LOGGER "$0: time says delete block rule"
     delete_rule
     else
-    logger "$0: time says add block rule"
+    $LOGGER "$0: time says add block rule"
     add_rule
     fi
 }
@@ -69,25 +77,25 @@ function check_time
 
 # if no arguments passed, then block tcp traffic
 if [[ "x$1" == "xblock" ]]; then
-    logger "$0: adding block rule"
+    $LOGGER "$0: adding block rule"
     add_rule
     exit 0
 fi
 
 if [[ "x$1" == "xchecktime" ]]; then
-    logger "$0: checking time"
+    $LOGGER "$0: checking time"
     check_time
     exit 0
 fi
 
 if [[ "x$1" == "xunblock" ]]; then
-    logger "$0: deleting block rule"
+    $LOGGER "$0: deleting block rule"
     delete_rule
     exit 0
 fi
 
 # if in doubt... block
-logger "$0: adding block rule"
+$LOGGER "$0: adding block rule"
 add_rule
 
 
